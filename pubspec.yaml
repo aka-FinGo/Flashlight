@@ -1,14 +1,27 @@
-name: lamp_app
-description: Lamp slider app
+name: lamp_animation_app
+description: "Flutter lamp animation project"
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.2.0 <4.0.0"
+  sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+  # Agar kelajakda qo'shimcha paketlar (masalan: provider, google_fonts) 
+  # kerak bo'lsa, shu yerga qo'shasiz.
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
+
+  # Agar rasmlar yoki shriftlar ishlatsangiz, ularni pastda e'lon qiling:
+  # assets:
+  #   - assets/images/
