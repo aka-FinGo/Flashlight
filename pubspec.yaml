@@ -10,10 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    torch_light: ^3.0.0
-  # Agar kelajakda qo'shimcha paketlar (masalan: provider, google_fonts) 
-  # kerak bo'lsa, shu yerga qo'shasiz.
   cupertino_icons: ^1.0.6
+  torch_light: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -22,7 +20,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  # Agar rasmlar yoki shriftlar ishlatsangiz, ularni pastda e'lon qiling:
-  # assets:
-  #   - assets/images/
