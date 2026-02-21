@@ -16,6 +16,7 @@ jobs:
         with:
           flutter-version: '3.19.0'
 
+      - run: flutter create .
       - run: flutter pub get
       - run: flutter build apk --release
 
