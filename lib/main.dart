@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'lamp_page.dart'; // Sizning kodingiz joylangan fayl nomi
 
 void main() {
   runApp(const MyApp());
@@ -9,31 +10,38 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'Lampa Animatsiyasi',
       debugShowCheckedModeBanner: false,
-      home: LampPage(),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        useMaterial3: true,
+      ),
+      home: const HomePage(),
     );
   }
 }
 
-class LampPage extends StatefulWidget {
-  const LampPage({super.key});
-
-  @override
-  State<LampPage> createState() => _LampPageState();
-}
-
-class _LampPageState extends State<LampPage> {
-  double lampValue = 0.0;
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lampValue > 0.5 ? Colors.black : Colors.grey.shade900,
       body: Center(
-        child: Slider(
-          value: lampValue,
-          onChanged: (v) => setState(() => lampValue = v),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xffbd8934),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LampPage()),
+            );
+          },
+          child: const Text("Lampani Yoqish", style: TextStyle(fontSize: 18)),
         ),
       ),
     );
