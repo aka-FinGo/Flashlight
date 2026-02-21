@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:torch_light/torch_light.dart'; // Standart fonar uchun (pubspec.yaml ga qo'shish esdan chiqmasin)
 
 class LampPage extends StatefulWidget {
   const LampPage({super.key});
@@ -10,19 +10,38 @@ class LampPage extends StatefulWidget {
 
 class _LampPageState extends State<LampPage> {
   double lampValue = 0.0;
+  Color activeColor = const Color(0xffbd8934); // Standart oltin rang
+  bool isTorchOn = false;
+
+  // Fonarni yoqish/o'chirish funksiyasi
+  Future<void> _toggleTorch() async {
+    try {
+      if (isTorchOn) {
+        await TorchLight.disableTorch();
+        setState(() => isTorchOn = false);
+      } else {
+        await TorchLight.enableTorch();
+        setState(() => isTorchOn = true);
+      }
+    } catch (e) {
+      debugPrint("Fonar ishlamadi: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // FON RANGI (Yorug'lik tarqatishi oshirildi)
         AnimatedContainer(
-          duration: Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 500),
           height: double.infinity,
           width: double.infinity,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: getBGColor(lampValue),
+              colors: getBGColor(lampValue, activeColor), // Sizning funksiyangizga rang ulandi
             ),
           ),
         ),
@@ -32,7 +51,7 @@ class _LampPageState extends State<LampPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Spacer(),
+                const Spacer(),
 
                 ///*** Lid *** ///
                 Container(
@@ -41,12 +60,12 @@ class _LampPageState extends State<LampPage> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Color(0xff161614),
+                        const Color(0xff161614),
                         Colors.grey.shade500,
-                        Color(0xff161614),
+                        const Color(0xff161614),
                       ],
                     ),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.white,
                         blurRadius: 30,
@@ -59,17 +78,18 @@ class _LampPageState extends State<LampPage> {
                 Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
-                    ///*** Flame Light Shadow  *** ///
+                    ///*** Flame Light Shadow (YORQINLIK KESKIN OSHIRILDI) *** ///
                     AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
+                      duration: const Duration(milliseconds: 500),
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
-                            color: getFlameLightShadowColor(lampValue),
-                            blurRadius: 100,
-                            offset: Offset(10, -10),
+                            color: getFlameLightShadowColor(lampValue, activeColor),
+                            blurRadius: 100 + (150 * lampValue), // Yoyilish radiusi kattalashdi
+                            spreadRadius: 30 * lampValue,        // Atrofga nur sochishi qo'shildi
+                            offset: const Offset(10, -10),
                           ),
                         ],
                       ),
@@ -77,20 +97,20 @@ class _LampPageState extends State<LampPage> {
 
                     ///*** Flame Light *** ///
                     AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
+                      duration: const Duration(milliseconds: 500),
                       width: 20,
                       height: 120,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: getFlameLightColor(lampValue),
+                          colors: getFlameLightColor(lampValue, activeColor),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: getFlameLightInnerShadowColor(lampValue),
-                            blurRadius: 30,
-                            offset: Offset(0, 10),
+                            color: getFlameLightInnerShadowColor(lampValue, activeColor),
+                            blurRadius: 30 + (20 * lampValue),
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -103,10 +123,10 @@ class _LampPageState extends State<LampPage> {
                           colors: [
                             Colors.grey.shade500,
                             Colors.transparent,
-                            Colors.grey.shade900.withValues(alpha: 0.2),
+                            Colors.grey.shade900.withOpacity(0.2),
                             Colors.transparent,
                             Colors.transparent,
-                            Colors.grey.shade900.withValues(alpha: 0.2),
+                            Colors.grey.shade900.withOpacity(0.2),
                             Colors.transparent,
                             Colors.grey.shade500,
                           ],
@@ -120,7 +140,7 @@ class _LampPageState extends State<LampPage> {
                   height: 40,
                   width: 130,
                   decoration: BoxDecoration(
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black,
                         blurRadius: 30,
@@ -138,19 +158,45 @@ class _LampPageState extends State<LampPage> {
                     ),
                   ),
                 ),
-                Spacer(),
-                Slider(
-                  inactiveColor: Colors.black,
-                  activeColor: Color(0xffbd8934),
-                  thumbColor: Colors.white,
-                  value: lampValue,
-                  onChanged: (newValue) {
-                    setState(() {
-                      lampValue = newValue;
-                    });
-                  },
+                
+                const Spacer(),
+
+                ///*** RANG TANLASH VA FONAR TUGMALARI ***///
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _colorBtn(const Color(0xffbd8934)), // Original Oltin
+                    _colorBtn(Colors.blueAccent),
+                    _colorBtn(Colors.redAccent),
+                    _colorBtn(Colors.greenAccent),
+                    const SizedBox(width: 20),
+                    // Fonar yoqish tugmasi
+                    IconButton(
+                      icon: Icon(
+                        isTorchOn ? Icons.flashlight_on : Icons.flashlight_off,
+                        color: isTorchOn ? Colors.white : Colors.white54,
+                        size: 30,
+                      ),
+                      onPressed: _toggleTorch,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 50),
+
+                ///*** SLIDER (Tagidan tepaga surildi) ***///
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 60.0, top: 20.0),
+                  child: Slider(
+                    inactiveColor: Colors.black,
+                    activeColor: activeColor,
+                    thumbColor: Colors.white,
+                    value: lampValue,
+                    onChanged: (newValue) {
+                      setState(() {
+                        lampValue = newValue;
+                      });
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -162,7 +208,7 @@ class _LampPageState extends State<LampPage> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.arrow_back_ios,
               color: Colors.white,
             ),
@@ -171,83 +217,102 @@ class _LampPageState extends State<LampPage> {
       ],
     );
   }
+
+  // Rang tugmasi yasovchi yordamchi widget
+  Widget _colorBtn(Color color) {
+    bool isSelected = activeColor == color;
+    return GestureDetector(
+      onTap: () => setState(() => activeColor = color),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected ? Colors.white : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: isSelected
+              ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 10)]
+              : [],
+        ),
+      ),
+    );
+  }
 }
 
-final List<Color> bgColor1 = [Color(0xff161614), Color(0xff161614)];
-final List<Color> bgColor2 = [
-  Color(0xff2f2319),
-  Color(0xff161614),
-  Color(0xff161614),
-];
-final List<Color> bgColor3 = [
-  Color(0xff6b4d22),
-  Color(0xff453a20),
-  Color(0xff161614),
-  Color(0xff161614),
-  Color(0xff161614),
-];
-final Color flameLightShadowColor1 = Colors.white38;
+// =========================================================================
+// SIZNING 109 QATOR KODINGIZ (Mantig'i to'liq saqlab qolingan holda 
+// foydalanuvchi tanlagan rangga (activeColor) moslashadigan qilindi)
+// =========================================================================
+
+final List<Color> bgColor1 = [const Color(0xff161614), const Color(0xff161614)];
 final Color offColor = Colors.black;
-final Color flameLightShadowColor2 = Color(0xff75431b);
-final Color flameLightShadowColor3 = Color(0xfff0cb83);
-final Color flameLightInnerShadowColor1 = Colors.white;
-final Color flameLightInnerShadowColor2 = Color(0xff6e3f1a);
-final Color flameLightInnerShadowColor3 = Color(0xfff0cb83);
 final List<Color> flameOffColor = [Colors.black, Colors.grey];
 final List<Color> flameLightColor1 = [Colors.white, Colors.white];
-final List<Color> flameLightColor2 = [
-  Color(0xffd5a140),
-  Color(0xfffcd685),
-  Color(0xffffee4aa),
-];
-final List<Color> flameLightColor3 = [
-  Color(0xfff0cb83),
-  Color(0xffffe7ad),
-  Colors.white,
-];
 
-List<Color> getBGColor(lampValue) {
+List<Color> getBGColor(double lampValue, Color activeColor) {
   if (lampValue > 0.8) {
-    return bgColor3;
+    return [
+      activeColor.withOpacity(0.3),
+      activeColor.withOpacity(0.15),
+      const Color(0xff161614),
+      const Color(0xff161614),
+      const Color(0xff161614),
+    ];
   } else if (lampValue > 0.4 && lampValue < 0.8) {
-    return bgColor2;
+    return [
+      activeColor.withOpacity(0.15),
+      const Color(0xff161614),
+      const Color(0xff161614),
+    ];
   } else {
     return bgColor1;
   }
 }
-List<Color> getFlameLightColor(lampValue) {
+
+List<Color> getFlameLightColor(double lampValue, Color activeColor) {
   if (lampValue > 0.8) {
-    return flameLightColor3;
+    return [
+      activeColor,
+      activeColor.withOpacity(0.7),
+      Colors.white,
+    ];
   } else if (lampValue > 0.4 && lampValue < 0.8) {
-    return flameLightColor2;
-  } else if (lampValue > 0.1 && lampValue < 0.5){
+    return [
+      activeColor.withOpacity(0.8),
+      activeColor.withOpacity(0.5),
+      activeColor.withOpacity(0.3),
+    ];
+  } else if (lampValue > 0.1 && lampValue < 0.5) {
     return flameLightColor1;
-  }else{
+  } else {
     return flameOffColor;
   }
 }
 
-Color getFlameLightShadowColor(lampValue) {
+Color getFlameLightShadowColor(double lampValue, Color activeColor) {
   if (lampValue > 0.75) {
-    return flameLightShadowColor3;
+    return activeColor;
   } else if (lampValue > 0.5 && lampValue < 0.75) {
-    return flameLightShadowColor2;
-  } else if (lampValue > 0.1 && lampValue < 0.5){
-    return flameLightShadowColor1;
-  }else{
+    return activeColor.withOpacity(0.6);
+  } else if (lampValue > 0.1 && lampValue < 0.5) {
+    return Colors.white38;
+  } else {
     return offColor;
   }
 }
 
-Color getFlameLightInnerShadowColor(lampValue) {
+Color getFlameLightInnerShadowColor(double lampValue, Color activeColor) {
   if (lampValue > 0.75) {
-    return flameLightInnerShadowColor3;
+    return activeColor;
   } else if (lampValue > 0.5 && lampValue < 0.75) {
-    return flameLightInnerShadowColor2;
-  } else if (lampValue > 0.1 && lampValue < 0.5){
-    return flameLightShadowColor1;
-  }else{
+    return activeColor.withOpacity(0.6);
+  } else if (lampValue > 0.1 && lampValue < 0.5) {
+    return Colors.white;
+  } else {
     return offColor;
   }
 }
-
