@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:torch_light/torch_light.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Rang tanlagich paketi
-import 'main.dart'; 
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class LampPage extends StatefulWidget {
-  const LampPage({super.key});
+  final int timerMinutes; // Asosiy oynadan keladigan taymer vaqti
+  const LampPage({super.key, required this.timerMinutes});
 
   @override
   State<LampPage> createState() => _LampPageState();
@@ -24,8 +24,8 @@ class _LampPageState extends State<LampPage> {
   }
 
   void _checkSleepTimer() {
-    if (globalSleepTimerMinutes > 0) {
-      sleepTimer = Timer(Duration(minutes: globalSleepTimerMinutes), () {
+    if (widget.timerMinutes > 0) { // Taymer vaqtini ishlatamiz
+      sleepTimer = Timer(Duration(minutes: widget.timerMinutes), () {
         if (isTorchOn) TorchLight.disableTorch();
         if (mounted) {
           Navigator.pop(context);
@@ -51,12 +51,11 @@ class _LampPageState extends State<LampPage> {
     }
   }
 
-  ///*** RANG TANLAGICH OYNASI ***///
   void _openColorPicker() {
     showDialog(
       context: context,
       builder: (context) {
-        Color tempColor = activeColor; // Tanlanayotgan vaqtinchalik rang
+        Color tempColor = activeColor; 
         return AlertDialog(
           backgroundColor: Colors.grey.shade900,
           title: const Text("Rangni tanlang", style: TextStyle(color: Colors.white)),
@@ -77,7 +76,7 @@ class _LampPageState extends State<LampPage> {
             ),
             TextButton(
               onPressed: () {
-                setState(() => activeColor = tempColor); // Asosiy rangni o'zgartirish
+                setState(() => activeColor = tempColor); 
                 Navigator.pop(context);
               },
               child: const Text("TANLASH", style: TextStyle(color: Color(0xffbd8934), fontWeight: FontWeight.bold)),
@@ -100,7 +99,6 @@ class _LampPageState extends State<LampPage> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          ///*** FON RANGI ***///
           AnimatedContainer(
             duration: const Duration(milliseconds: 500),
             height: double.infinity,
@@ -120,14 +118,10 @@ class _LampPageState extends State<LampPage> {
               children: [
                 const Spacer(),
 
-                ///*** Lid *** ///
                 Container(
-                  width: 130,
-                  height: 3,
+                  width: 130, height: 3,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [const Color(0xff161614), Colors.grey.shade500, const Color(0xff161614)],
-                    ),
+                    gradient: LinearGradient(colors: [const Color(0xff161614), Colors.grey.shade500, const Color(0xff161614)]),
                     boxShadow: const [BoxShadow(color: Colors.white, blurRadius: 30, offset: Offset(5, 5))],
                   ),
                 ),
@@ -135,11 +129,9 @@ class _LampPageState extends State<LampPage> {
                 Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
-                    ///*** Flame Light Shadow *** ///
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 500),
-                      width: 100,
-                      height: 100,
+                      width: 100, height: 100,
                       decoration: BoxDecoration(
                         boxShadow: [
                           BoxShadow(
@@ -152,29 +144,24 @@ class _LampPageState extends State<LampPage> {
                       ),
                     ),
 
-                    ///*** Flame Light *** ///
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 500),
-                      width: 20 + (10 * lampValue),
-                      height: 120,
+                      width: 20 + (10 * lampValue), height: 120,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
+                          begin: Alignment.topCenter, end: Alignment.bottomCenter,
                           colors: getFlameLightColor(lampValue, activeColor),
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: getFlameLightInnerShadowColor(lampValue, activeColor),
-                            blurRadius: 30 + (40 * lampValue),
-                            offset: const Offset(0, 10),
+                            blurRadius: 30 + (40 * lampValue), offset: const Offset(0, 10),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      width: 128,
-                      height: 220,
+                      width: 128, height: 220,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -189,39 +176,32 @@ class _LampPageState extends State<LampPage> {
                 ),
 
                 Container(
-                  height: 40,
-                  width: 130,
+                  height: 40, width: 130,
                   decoration: BoxDecoration(
                     boxShadow: const [BoxShadow(color: Colors.black, blurRadius: 30, offset: Offset(0, 10))],
-                    gradient: LinearGradient(
-                      colors: [Colors.grey.shade800, Colors.black, Colors.grey.shade800, Colors.black, Colors.grey.shade800],
-                    ),
+                    gradient: LinearGradient(colors: [Colors.grey.shade800, Colors.black, Colors.grey.shade800, Colors.black, Colors.grey.shade800]),
                   ),
                 ),
                 
                 const Spacer(),
 
-                ///*** RANG TANLASH, PALITRA VA FONAR TUGMALARI ***///
                 Padding(
                   padding: const EdgeInsets.only(bottom: 40.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _colorBtn(const Color(0xffbd8934)), // Oltin
-                      _colorBtn(Colors.blueAccent),       // Ko'k
-                      _colorBtn(Colors.redAccent),        // Qizil
-                      _colorBtn(Colors.greenAccent),      // Yashil
+                      _colorBtn(const Color(0xffbd8934)), 
+                      _colorBtn(Colors.blueAccent),       
+                      _colorBtn(Colors.redAccent),        
+                      _colorBtn(Colors.greenAccent),      
                       
-                      // PALITRA TUGMASI (O'zingiz xohlagan rangni tanlash)
                       GestureDetector(
                         onTap: _openColorPicker,
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 8),
-                          width: 32,
-                          height: 32,
+                          width: 32, height: 32,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white10,
+                            shape: BoxShape.circle, color: Colors.white10,
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: const Icon(Icons.color_lens, size: 18, color: Colors.white),
@@ -230,7 +210,6 @@ class _LampPageState extends State<LampPage> {
 
                       const SizedBox(width: 10),
                       
-                      // Fonar
                       IconButton(
                         icon: Icon(
                           isTorchOn ? Icons.flashlight_on : Icons.flashlight_off,
@@ -246,7 +225,6 @@ class _LampPageState extends State<LampPage> {
             ),
           ),
           
-          ///*** VERTIKAL SLIDER (O'NG TARAFDA) ***///
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
@@ -271,10 +249,8 @@ class _LampPageState extends State<LampPage> {
             ),
           ),
 
-          ///*** ORQAGA QAYTISH TUGMASI ***///
           Positioned(
-            top: 50,
-            left: 20,
+            top: 50, left: 20,
             child: IconButton(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
@@ -291,11 +267,9 @@ class _LampPageState extends State<LampPage> {
       onTap: () => setState(() => activeColor = color),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 5),
-        width: 30,
-        height: 30,
+        width: 30, height: 30,
         decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
+          color: color, shape: BoxShape.circle,
           border: Border.all(color: isSelected ? Colors.white : Colors.transparent, width: 2),
           boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.8), blurRadius: 15)] : [],
         ),
@@ -304,7 +278,6 @@ class _LampPageState extends State<LampPage> {
   }
 }
 
-// Rang funksiyalari
 final List<Color> bgColor1 = [const Color(0xff161614), const Color(0xff161614)];
 final Color offColor = Colors.black;
 final List<Color> flameOffColor = [Colors.black, Colors.grey];
