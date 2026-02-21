@@ -1,18 +1,100 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:torch_light/torch_light.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class LampPage extends StatefulWidget {
-  const LampPage({super.key});
+  final int timerMinutes; // Asosiy oynadan keladigan taymer
+  const LampPage({super.key, required this.timerMinutes});
 
   @override
   State<LampPage> createState() => _LampPageState();
 }
 
 class _LampPageState extends State<LampPage> {
-  // Yorqinlik darajasi (Slayder uchun)
-  double _brightness = 0.5;
+  double _brightness = 0.5; // Yorqinlik darajasi
+  Color _selectedColor = const Color(0xffbd8934); // Asosiy oltin rang
+  bool isTorchOn = false;
+  Timer? sleepTimer;
 
-  // Tanlangan rang (Lampaning nuri uchun)
-  Color _selectedColor = const Color(0xFFFFD700); // Oltin rang
+  @override
+  void initState() {
+    super.initState();
+    _checkSleepTimer();
+  }
+
+  // Taymerni tekshirish
+  void _checkSleepTimer() {
+    if (widget.timerMinutes > 0) {
+      sleepTimer = Timer(Duration(minutes: widget.timerMinutes), () {
+        if (isTorchOn) TorchLight.disableTorch();
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Taymer yakunlandi. Chiroq o'chirildi.")),
+          );
+        }
+      });
+    }
+  }
+
+  // Haqiqiy fonarni yoqish
+  Future<void> _toggleTorch() async {
+    try {
+      if (isTorchOn) {
+        await TorchLight.disableTorch();
+        setState(() => isTorchOn = false);
+      } else {
+        await TorchLight.enableTorch();
+        setState(() => isTorchOn = true);
+      }
+    } catch (e) {
+      debugPrint("Fonar ishlamadi: $e");
+    }
+  }
+
+  // Rang palitrasini ochish
+  void _openColorPicker() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        Color tempColor = _selectedColor; 
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          title: const Text("Rangni tanlang", style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: _selectedColor,
+              onColorChanged: (color) {
+                tempColor = color;
+              },
+              showLabel: false,
+              pickerAreaHeightPercent: 0.8,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("BEKOR QILISH", style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() => _selectedColor = tempColor); 
+                Navigator.pop(context);
+              },
+              child: const Text("TANLASH", style: TextStyle(color: Color(0xffbd8934), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    sleepTimer?.cancel(); 
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +104,14 @@ class _LampPageState extends State<LampPage> {
         children: [
           // 1. Fon Yorug'lik Effekti (Radial Gradient)
           Positioned.fill(
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   center: Alignment.center,
-                  radius: 0.8 + (_brightness * 0.7), // Yorqinlikka qarab kengayadi
+                  radius: 0.8 + (_brightness * 0.7),
                   colors: [
-                    _selectedColor.withOpacity(0.8 * _brightness), // Markaziy yorug'lik
+                    _selectedColor.withOpacity(0.8 * _brightness),
                     _selectedColor.withOpacity(0.4 * _brightness),
                     Colors.black.withOpacity(0.8),
                     Colors.black,
@@ -49,7 +132,7 @@ class _LampPageState extends State<LampPage> {
             ),
           ),
 
-          // 3. Asosiy Kontent (Lampa, Slayder, Tugmalar)
+          // 3. Asosiy Kontent
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -80,16 +163,17 @@ class _LampPageState extends State<LampPage> {
                     ),
                     // Ichki yorug'lik filamenti
                     Positioned(
-                      bottom: 50, // Asosdan yuqoriroqda
-                      child: Container(
-                        width: 20,
+                      bottom: 50, 
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 20 + (10 * _brightness),
                         height: 150,
                         decoration: BoxDecoration(
-                          color: _selectedColor.withOpacity(0.8 + (0.2 * _brightness)),
+                          color: _brightness > 0.05 ? _selectedColor.withOpacity(0.8 + (0.2 * _brightness)) : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: _selectedColor,
+                              color: _brightness > 0.05 ? _selectedColor : Colors.transparent,
                               blurRadius: 30 * _brightness + 20,
                               spreadRadius: 5 * _brightness,
                             ),
@@ -151,14 +235,22 @@ class _LampPageState extends State<LampPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildColorButton(const Color(0xFFC5A05B)), // Oltin/Jigarrang
-                      _buildColorButton(const Color(0xFF4285F4)), // Ko'k
-                      _buildColorButton(const Color(0xFFEA4335)), // Qizil
-                      _buildColorButton(const Color(0xFF34A853)), // Yashil
+                      _buildColorButton(const Color(0xffbd8934)), 
+                      _buildColorButton(const Color(0xFF4285F4)), 
+                      _buildColorButton(const Color(0xFFEA4335)), 
+                      _buildColorButton(const Color(0xFF34A853)), 
                       const SizedBox(width: 20),
-                      _buildIconButton(Icons.color_lens), // Palitra
+                      // Palitra
+                      GestureDetector(
+                        onTap: _openColorPicker,
+                        child: _buildIconButton(Icons.color_lens, false),
+                      ),
                       const SizedBox(width: 10),
-                      _buildIconButton(Icons.flashlight_off), // Fonar o'chiq
+                      // Fonar
+                      GestureDetector(
+                        onTap: _toggleTorch,
+                        child: _buildIconButton(isTorchOn ? Icons.flashlight_on : Icons.flashlight_off, isTorchOn),
+                      ),
                     ],
                   ),
                 ),
@@ -170,7 +262,6 @@ class _LampPageState extends State<LampPage> {
     );
   }
 
-  // Rangli dumaloq tugma yaratish uchun yordamchi funksiya
   Widget _buildColorButton(Color color) {
     bool isSelected = _selectedColor == color;
     return GestureDetector(
@@ -186,27 +277,23 @@ class _LampPageState extends State<LampPage> {
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
-          border: isSelected
-              ? Border.all(color: Colors.white, width: 3)
-              : null,
-          boxShadow: isSelected
-              ? [BoxShadow(color: color.withOpacity(0.6), blurRadius: 15, spreadRadius: 2)]
-              : [],
+          border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.6), blurRadius: 15, spreadRadius: 2)] : [],
         ),
       ),
     );
   }
 
-  // Palitra va Fonar ikonkalari uchun yordamchi funksiya
-  Widget _buildIconButton(IconData icon) {
+  Widget _buildIconButton(IconData icon, bool isActive) {
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white.withOpacity(0.1),
+        border: isActive ? Border.all(color: Colors.white, width: 1.5) : null,
       ),
-      child: Icon(icon, color: Colors.white70),
+      child: Icon(icon, color: isActive ? Colors.white : Colors.white70),
     );
   }
 }
